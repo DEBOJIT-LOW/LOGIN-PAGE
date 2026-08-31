@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoginApp Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 320px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button.logout-btn {
+            background: #dc3545;
+        }
+
+        button.logout-btn:hover {
+            background: #a71d2a;
+        }
+
+        #output {
+            word-break: break-all;
+            margin-top: 10px;
+            font-weight: bold;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 1. REGISTER CARD -->
+    <div class="card">
+        <h2>Register</h2>
+        <input type="text" id="regUsername" placeholder="Username">
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button onclick="register()">Register</button>
+    </div>
+
+    <!-- 2. LOGIN CARD -->
+    <div class="card">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Log In</button>
+    </div>
+
+    <!-- 3. ACTIONS & TEST CARD -->
+    <div class="card">
+        <h2>Protected API</h2>
+        <button onclick="getProfile()">Fetch User Profile</button>
+        <button onclick="logout()" class="logout-btn">Log Out</button>
+    </div>
+
+    <!-- 4. OUTPUT CARD -->
+    <div class="card">
+        <h3>Response Output:</h3>
+        <div id="output">Not logged in.</div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:5280/api";
+
+        // 1. REGISTER USER
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const responseText = await response.text();
+                let data;
+                try { data = JSON.parse(responseText); } catch { data = responseText; }
+
+                if (response.ok) {
+                    document.getElementById('output').innerText = data.message || data || "Registration successful!";
+                } else {
+                    document.getElementById('output').innerText = data.message || data || "Registration failed.";
+                }
+            } catch (err) {
+                document.getElementById('output').innerText = "Error: " + err.message;
+            }
+        }
+
+        // 2. LOGIN USER
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('output').innerText = `Logged in as ${data.username}!\nJWT Token stored in LocalStorage.`;
+                } else {
+                    document.getElementById('output').innerText = data.message || "Login failed.";
+                }
+            } catch (err) {
+                document.getElementById('output').innerText = "Error: " + err.message;
+            }
+        }
+
+        // 3. FETCH PROTECTED PROFILE
+        async function getProfile() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('output').innerText = "Please log in first.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/protected/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+                } else {
+                    document.getElementById('output').innerText = `Unauthorized (${response.status})\nToken missing, invalid, or expired.`;
+                }
+            } catch (err) {
+                document.getElementById('output').innerText = "Error: " + err.message;
+            }
+        }
+
+        // 4. LOG OUT
+        function logout() {
+            localStorage.removeItem('token');
+            document.getElementById('output').innerText = "Logged out. Token cleared.";
+        }
+    </script>
+</body>
+
+</html>

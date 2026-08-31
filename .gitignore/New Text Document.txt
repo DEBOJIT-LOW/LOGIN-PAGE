@@ -1,0 +1,13 @@
+# .NET Build output
+bin/
+obj/
+*.user
+*.suo
+
+# IDE settings
+.vscode/
+.vs/
+
+# Node / Frontend artifacts (if any)
+node_modules/
+dist/
