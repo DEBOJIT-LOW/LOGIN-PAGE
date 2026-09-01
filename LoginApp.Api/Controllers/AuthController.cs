@@ -52,18 +52,24 @@ namespace LoginApp.Api.Controllers
         }
 
         // LOGIN USER
+
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto request)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (user == null)
             {
-                return Unauthorized(new { message = "Invalid username or password." });
+                return NotFound(new { message = "User not found." });
             }
 
-            // Generate JWT Token
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                return Unauthorized(new { message = "Incorrect password." });
+            }
+
             string token = CreateJwtToken(user);
 
             return Ok(new
@@ -74,6 +80,49 @@ namespace LoginApp.Api.Controllers
                 token = token
             });
         }
+        // [HttpPost("login")]
+        // public async Task<IActionResult> Login(LoginDto request)
+        // {
+        //     var user = await _context.Users
+        //         .FirstOrDefaultAsync(u => u.Username == request.Username);
+
+        //     if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        //     {
+        //         return Unauthorized(new { message = "Invalid username or password." });
+        //     }
+
+        //     // Generate JWT Token
+        //     string token = CreateJwtToken(user);
+
+        //     return Ok(new
+        //     {
+        //         message = "Login successful",
+        //         username = user.Username,
+        //         email = user.Email,
+        //         token = token
+        //     });
+        // }
+
+        
+
+        // RESET PASSWORD
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(
+                u => u.Username == request.Username && u.Email == request.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "No matching account found for that username and email." });
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password reset successful. You can now log in with your new password." });
+        }
+
 
         // HELPER METHOD: Generate JWT Token
         private string CreateJwtToken(User user)

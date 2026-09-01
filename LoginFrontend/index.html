@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -87,17 +87,17 @@
     </div>
 
     <!-- 3. ACTIONS & TEST CARD -->
-    <div class="card">
+    <!-- <div class="card">
         <h2>Protected API</h2>
         <button onclick="getProfile()">Fetch User Profile</button>
         <button onclick="logout()" class="logout-btn">Log Out</button>
-    </div>
+    </div> -->
 
     <!-- 4. OUTPUT CARD -->
-    <div class="card">
+    <!-- <div class="card">
         <h3>Response Output:</h3>
         <div id="output">Not logged in.</div>
-    </div>
+    </div> -->
 
     <script>
         const API_URL = "http://localhost:5280/api";
@@ -120,8 +120,10 @@
                 try { data = JSON.parse(responseText); } catch { data = responseText; }
 
                 if (response.ok) {
+                    alert("Registration successful! You can now log in.");
                     document.getElementById('output').innerText = data.message || data || "Registration successful!";
                 } else {
+                    alert(data.message || data || "Registration failed.");
                     document.getElementById('output').innerText = data.message || data || "Registration failed.";
                 }
             } catch (err) {
@@ -144,7 +146,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
-                    document.getElementById('output').innerText = `Logged in as ${data.username}!\nJWT Token stored in LocalStorage.`;
+                    window.location.href = "dashboard.html";
                 } else {
                     document.getElementById('output').innerText = data.message || "Login failed.";
                 }
@@ -189,4 +191,4 @@
     </script>
 </body>
 
-</html>
+</html> -->
